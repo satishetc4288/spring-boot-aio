@@ -7,6 +7,7 @@ import com.satish.exp.dao.model.Address;
 import com.satish.exp.dao.model.Employee;
 import com.satish.exp.dao.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,16 +36,17 @@ public class DaoService {
     }
 
     @Transactional
-    public Employee addEmployee(Employee employee){
+    @Async
+    public void addEmployee(Employee employee){
         employeeRepository.save(employee);
         Address address = new Address();
         address.setId(1l);
         address.setAddress("Varanasi");
         address.setEmployee(employee);
-        if(1==1)
-            throw new RuntimeException("hahahah");
+        //if(1==1)
+            //throw new RuntimeException("hahahah");
         this.addressRepository.save(address);
-        return employee;
+        //return employee;
     }
 
 

@@ -7,6 +7,7 @@ import com.satish.exp.service.DaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
@@ -34,10 +35,11 @@ public class BaseController {
     }
 
     @PostMapping("/add/employee")
-    public Employee addEmployee(@RequestParam String name){
+    public CompletableFuture<Employee> addEmployee(@RequestParam String name) throws InterruptedException{
         Employee employee = new Employee();
         employee.setName(name);
         daoService.addEmployee(employee);
-        return employee;
+        //Thread.sleep(5000);
+        return CompletableFuture.completedFuture(employee);
     }
 }
