@@ -1,5 +1,6 @@
 package com.satish.exp.controller;
 
+import com.satish.exp.dao.model.Employee;
 import com.satish.exp.model.Greeting;
 import com.satish.exp.dao.model.User;
 import com.satish.exp.service.DaoService;
@@ -23,12 +24,20 @@ public class BaseController {
         return new Greeting(counter.incrementAndGet(), String.format(template, name));
     }
 
-    @PostMapping("/add")
+    @PostMapping("/add/user")
     public User addNewUser(@RequestParam String name, @RequestParam String email){
         User user = new User();
         user.setName(name);
         user.setEmail(email);
         daoService.addUser(user);
         return user;
+    }
+
+    @PostMapping("/add/employee")
+    public Employee addEmployee(@RequestParam String name){
+        Employee employee = new Employee();
+        employee.setName(name);
+        daoService.addEmployee(employee);
+        return employee;
     }
 }
