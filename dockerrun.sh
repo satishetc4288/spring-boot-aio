@@ -1,0 +1,1 @@
+sudo docker run -it --network="host" --name running-sb-aio spring-boot-aio:latest
