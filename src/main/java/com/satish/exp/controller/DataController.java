@@ -7,12 +7,13 @@ import com.satish.exp.service.DaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping(path="/demo")
-public class BaseController {
+public class DataController {
 
     private static final String template = "hello %s";
     @Autowired
@@ -41,5 +42,10 @@ public class BaseController {
         daoService.addEmployee(employee);
         //Thread.sleep(5000);
         return CompletableFuture.completedFuture(employee);
+    }
+
+    @GetMapping("/get/all/users")
+    public CompletableFuture<List<User>> getAllUsers(){
+        return daoService.getAllUsers();
     }
 }
