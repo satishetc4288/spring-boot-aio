@@ -20,5 +20,6 @@ public class HttpServiceController {
     @GetMapping("/weather")
     public ResponseEntity<String> getWeatherData(@RequestParam Float latitude, @RequestParam Float longitude){
         return httpWebService.getWeatherData(latitude,longitude);
+        //return ResponseEntity.ok(httpWebService.getWeatherData());
     }
 }
