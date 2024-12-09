@@ -1,7 +1,5 @@
 package com.satish.exp.controller;
 
-import com.satish.exp.model.Greeting;
-import com.satish.exp.service.DaoService;
 import com.satish.exp.service.HttpWebService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

@@ -6,9 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AmqpSubscriber {
 
-    @RabbitListener(queues = "test-java-queue")
-    public void processMessage(String content) {
-        System.out.println("########### message received " + content);
-    }
+    //@RabbitListener(queues = "test-java-queue")
+    //public void processMessage(String content) {System.out.println("########### message received " + content);}
 
 }
