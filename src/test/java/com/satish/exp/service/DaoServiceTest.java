@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -36,10 +37,16 @@ public class DaoServiceTest {
         daoService.setAddressRepository(addressRepository);
         daoService.setUserRepository(userRepository);
         daoService.setEmployeeRepository(employeeRepository);
+
+
+        ReflectionTestUtils.setField(daoService, "userRepository", userRepository);
+        ReflectionTestUtils.setField(daoService, "employeeRepository", employeeRepository);
+        ReflectionTestUtils.setField(daoService, "addressRepository", addressRepository);
     }
 
     @Test
     public void testUserAddSuccess(){
+
         when(userRepository.save(Mockito.any())).thenReturn(new User());
         daoService.addUser(new User());
         assertTrue(true);
