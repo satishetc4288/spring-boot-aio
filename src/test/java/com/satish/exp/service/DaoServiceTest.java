@@ -38,7 +38,6 @@ public class DaoServiceTest {
         daoService.setUserRepository(userRepository);
         daoService.setEmployeeRepository(employeeRepository);
 
-
         ReflectionTestUtils.setField(daoService, "userRepository", userRepository);
         ReflectionTestUtils.setField(daoService, "employeeRepository", employeeRepository);
         ReflectionTestUtils.setField(daoService, "addressRepository", addressRepository);
