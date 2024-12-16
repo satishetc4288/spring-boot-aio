@@ -1,8 +1,8 @@
 package com.satish.exp.controller;
 
-import com.satish.exp.dao.model.Employee;
+import com.satish.exp.repo.model.Employee;
 import com.satish.exp.model.Greeting;
-import com.satish.exp.dao.model.User;
+import com.satish.exp.repo.model.User;
 import com.satish.exp.service.DaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package com.satish.exp.dao.model;
+package com.satish.exp.repo.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

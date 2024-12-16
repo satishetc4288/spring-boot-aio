@@ -1,7 +1,6 @@
-package com.satish.exp.dao;
+package com.satish.exp.repo;
 
-import com.satish.exp.dao.model.Address;
-import com.satish.exp.dao.model.User;
+import com.satish.exp.repo.model.Address;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

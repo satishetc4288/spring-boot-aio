@@ -20,7 +20,7 @@ public class HttpWebService {
     public ResponseEntity<String> getWeatherData(Float latitude, Float longitude){
         HttpEntity<String> re = new HttpEntity<>("satish");
         return restTemplate.exchange(
-"https://api.open-meteo.com/v1/forecast?" +
+    "https://api.open-meteo.com/v1/forecast?" +
         "latitude={latitude}&" +
         "longitude={longitude}&" +
         "current=temperature_2m,wind_speed_10m&" +

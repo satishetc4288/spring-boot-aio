@@ -1,11 +1,11 @@
 package com.satish.exp.service;
 
-import com.satish.exp.dao.AddressRepository;
-import com.satish.exp.dao.EmployeeRepository;
-import com.satish.exp.dao.UserRepository;
-import com.satish.exp.dao.model.Address;
-import com.satish.exp.dao.model.Employee;
-import com.satish.exp.dao.model.User;
+import com.satish.exp.repo.AddressRepository;
+import com.satish.exp.repo.EmployeeRepository;
+import com.satish.exp.repo.UserRepository;
+import com.satish.exp.repo.model.Address;
+import com.satish.exp.repo.model.Employee;
+import com.satish.exp.repo.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
