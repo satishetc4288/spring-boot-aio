@@ -13,6 +13,15 @@ public class User {
 
     private String email;
 
+    public User(Integer id, String name, String email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
+    public User() {
+    }
+
     public Integer getId() {
         return id;
     }

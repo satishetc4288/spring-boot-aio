@@ -3,6 +3,7 @@ package com.satish.exp.service;
 import com.satish.exp.repo.AddressRepository;
 import com.satish.exp.repo.EmployeeRepository;
 import com.satish.exp.repo.UserRepository;
+import com.satish.exp.repo.UserRepository2;
 import com.satish.exp.repo.model.Address;
 import com.satish.exp.repo.model.Employee;
 import com.satish.exp.repo.model.User;
@@ -18,6 +19,7 @@ import java.util.concurrent.CompletableFuture;
 public class DaoService {
 
     private UserRepository userRepository;
+    private UserRepository2 userRepository2;
     private EmployeeRepository employeeRepository;
     private AddressRepository addressRepository;
 
@@ -31,6 +33,8 @@ public class DaoService {
     public void setAddressRepository(AddressRepository addressRepository){
         this.addressRepository=addressRepository;
     }
+    @Autowired
+    public  void setUserRepository2(UserRepository2 userRepository2) { this.userRepository2=userRepository2;};
 
     @Transactional
     public User addUser(User user){
@@ -54,5 +58,9 @@ public class DaoService {
 
     public CompletableFuture<List<User>> getAllUsers(){
         return CompletableFuture.supplyAsync( () -> userRepository.findAll());
+    }
+
+    public CompletableFuture<User> getAllUsers(Long id){
+        return CompletableFuture.supplyAsync( () -> userRepository2.findById(id).orElse(null));
     }
 }

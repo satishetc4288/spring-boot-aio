@@ -48,4 +48,9 @@ public class DataController {
     public CompletableFuture<List<User>> getAllUsers(){
         return daoService.getAllUsers();
     }
+
+    @GetMapping("/get/user/{id}")
+    public CompletableFuture<User> getUserById(@PathVariable("id") Long id){
+        return daoService.getAllUsers(id);
+    }
 }
