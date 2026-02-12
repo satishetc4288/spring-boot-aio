@@ -24,43 +24,57 @@ public class DaoService {
     private AddressRepository addressRepository;
 
     @Autowired
-    public void setUserRepository(UserRepository userRepository){
-        this.userRepository=userRepository;
+    public void setUserRepository(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
+
     @Autowired
-    public void setEmployeeRepository(EmployeeRepository employeeRepository){this.employeeRepository=employeeRepository;}
-    @Autowired
-    public void setAddressRepository(AddressRepository addressRepository){
-        this.addressRepository=addressRepository;
+    public void setEmployeeRepository(EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
     }
+
     @Autowired
-    public  void setUserRepository2(UserRepository2 userRepository2) { this.userRepository2=userRepository2;};
+    public void setAddressRepository(AddressRepository addressRepository) {
+        this.addressRepository = addressRepository;
+    }
+
+    @Autowired
+    public void setUserRepository2(UserRepository2 userRepository2) {
+        this.userRepository2 = userRepository2;
+    };
 
     @Transactional
-    public User addUser(User user){
+    public User addUser(User user) {
         userRepository.save(user);
         return user;
     }
 
     @Transactional
     @Async
-    public void addEmployee(Employee employee){
+    public void addEmployee(Employee employee) {
         employeeRepository.save(employee);
         Address address = new Address();
         address.setId(1l);
         address.setAddress("Varanasi");
         address.setEmployee(employee);
-        //if(1==1)
-            //throw new RuntimeException("hahahah");
+        // if(1==1)
+        // throw new RuntimeException("hahahah");
         this.addressRepository.save(address);
-        //return employee;
+        // return employee;
     }
 
-    public CompletableFuture<List<User>> getAllUsers(){
-        return CompletableFuture.supplyAsync( () -> userRepository.findAll());
+    public CompletableFuture<List<User>> getAllUsers() {
+        return CompletableFuture.supplyAsync(() -> userRepository.findAll());
     }
 
-    public CompletableFuture<User> getAllUsers(Long id){
-        return CompletableFuture.supplyAsync( () -> userRepository2.findById(id).orElse(null));
+    public CompletableFuture<List<User>> getAllUsers(Long id) {
+        return CompletableFuture.supplyAsync(() -> {
+            User user = userRepository2.findById(id).orElse(null);
+            return user != null ? List.of(user) : List.of();
+        });
+    }
+
+    public CompletableFuture<List<User>> getAllUsers(String name) {
+        return CompletableFuture.supplyAsync(() -> userRepository2.findByName(name));
     }
 }
