@@ -1,10 +1,14 @@
 package com.satish.exp.config;
 
 import com.satish.exp.model.KafkaMessageEvent;
+import com.satish.exp.model.UserMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+
+import static com.satish.exp.commons.ApplicationConstants.KAFKA;
 
 /**
  * Kafka consumer that listens on the configured topic and logs
@@ -20,6 +24,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@Profile(KAFKA)
 public class KafkaConsumer {
 
     /**
@@ -29,8 +34,8 @@ public class KafkaConsumer {
      *               offset, key, and value
      */
     @KafkaListener(topics = "${spring.kafka.consumer.topic}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerContainerFactory")
-    public void consume(ConsumerRecord<String, String> record) {
-        KafkaMessageEvent event = KafkaMessageEvent.builder()
+    public void consume(ConsumerRecord<String, UserMessage> record) {
+        KafkaMessageEvent<UserMessage> event = KafkaMessageEvent.<UserMessage>builder()
                 .topic(record.topic())
                 .partition(record.partition())
                 .offset(record.offset())

@@ -9,7 +9,7 @@ import lombok.Data;
  */
 @Data
 @Builder
-public class KafkaMessageEvent {
+public class KafkaMessageEvent<T> {
 
     /** The Kafka topic the message was received from. */
     private String topic;
@@ -24,5 +24,5 @@ public class KafkaMessageEvent {
     private String key;
 
     /** The record value / message payload. */
-    private String value;
+    private T value;
 }
