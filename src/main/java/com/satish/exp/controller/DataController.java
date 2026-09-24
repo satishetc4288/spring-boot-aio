@@ -36,12 +36,10 @@ public class DataController {
     }
 
     @PostMapping("/add/employee")
-    public CompletableFuture<Employee> addEmployee(@RequestParam String name) throws InterruptedException {
+    public CompletableFuture<Employee> addEmployee(@RequestParam String name) {
         Employee employee = new Employee();
         employee.setName(name);
-        daoService.addEmployee(employee);
-        // Thread.sleep(5000);
-        return CompletableFuture.completedFuture(employee);
+        return daoService.addEmployee(employee);
     }
 
     @GetMapping("/get/all/users")

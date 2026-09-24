@@ -15,17 +15,23 @@ public class Customer {
     private String name;
     public static void main(String[] args) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        List<Customers> customers =
-            Files.readAllLines(Paths.get("/Users/satish/Documents/workspace/spring-boot-aio/src/main/resources/test.json"))
-            .stream().filter(str -> str.startsWith("{\"customers\":"))
-            .map(str -> {
-                try {
-                    return mapper.readValue(str, Customers.class);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            }).toList();
-        System.out.println(customers.size());
+        try (var inputStream = Customer.class.getClassLoader().getResourceAsStream("test.json")) {
+            if (inputStream == null) {
+                throw new IllegalArgumentException("test.json not found on classpath");
+            }
+            try (var reader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8))) {
+                List<Customers> customers = reader.lines()
+                        .filter(str -> str.startsWith("{\"customers\":"))
+                        .map(str -> {
+                            try {
+                                return mapper.readValue(str, Customers.class);
+                            } catch (JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).toList();
+                System.out.println(customers.size());
+            }
+        }
     }
 }
 

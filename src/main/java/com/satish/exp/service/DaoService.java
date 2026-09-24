@@ -8,12 +8,14 @@ import com.satish.exp.repo.model.Address;
 import com.satish.exp.repo.model.Employee;
 import com.satish.exp.repo.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Service
 public class DaoService {
@@ -22,6 +24,10 @@ public class DaoService {
     private UserRepository2 userRepository2;
     private EmployeeRepository employeeRepository;
     private AddressRepository addressRepository;
+
+    @Autowired
+    @Qualifier("asyncExecutor")
+    private Executor asyncExecutor;
 
     @Autowired
     public void setUserRepository(UserRepository userRepository) {
@@ -50,31 +56,41 @@ public class DaoService {
     }
 
     @Transactional
-    @Async
-    public void addEmployee(Employee employee) {
+    public void addUsersDistributed(User user1, User user2) {
+        userRepository.save(user1);
+        userRepository2.save(user2);
+    }
+
+    @Transactional
+    public void addUsersDistributedWithFailure(User user1, User user2) {
+        userRepository.save(user1);
+        userRepository2.save(user2);
+        throw new RuntimeException("Simulating transaction failure to trigger rollback");
+    }
+
+    @Transactional
+    @Async("asyncExecutor")
+    public CompletableFuture<Employee> addEmployee(Employee employee) {
         employeeRepository.save(employee);
         Address address = new Address();
-        address.setId(1l);
         address.setAddress("Varanasi");
         address.setEmployee(employee);
-        // if(1==1)
-        // throw new RuntimeException("hahahah");
         this.addressRepository.save(address);
-        // return employee;
+        return CompletableFuture.completedFuture(employee);
     }
 
     public CompletableFuture<List<User>> getAllUsers() {
-        return CompletableFuture.supplyAsync(() -> userRepository.findAll());
+        return CompletableFuture.supplyAsync(() -> userRepository.findAll(), asyncExecutor);
     }
 
     public CompletableFuture<List<User>> getAllUsers(Long id) {
         return CompletableFuture.supplyAsync(() -> {
             User user = userRepository2.findById(id).orElse(null);
             return user != null ? List.of(user) : List.of();
-        });
+        }, asyncExecutor);
     }
 
     public CompletableFuture<List<User>> getAllUsers(String name) {
-        return CompletableFuture.supplyAsync(() -> userRepository2.findByName(name));
+        return CompletableFuture.supplyAsync(() -> userRepository2.findByName(name), asyncExecutor);
     }
 }

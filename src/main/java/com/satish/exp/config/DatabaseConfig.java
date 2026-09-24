@@ -1,40 +1,42 @@
 package com.satish.exp.config;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import com.atomikos.jdbc.AtomikosDataSourceBean;
+import com.atomikos.icatch.jta.UserTransactionImp;
+import com.atomikos.icatch.jta.UserTransactionManager;
 import jakarta.persistence.EntityManagerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.PlatformTransactionManager;
-
+import org.springframework.transaction.jta.JtaTransactionManager;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import javax.sql.DataSource;
 import java.util.Properties;
 
 /**
- * Custom DataSource configuration.
- *
- * Spring Boot's DataSourceAutoConfiguration and HibernateJpaAutoConfiguration
- * are excluded in Application.java so that this class takes full control of:
- *  - HikariCP connection pool
- *  - JPA EntityManagerFactory
- *  - JpaTransactionManager
- *
- * All settings are read from the custom "app.datasource.*" and "app.jpa.*"
- * namespaces defined in application.properties.
+ * Custom JTA / XA DataSource configuration using Atomikos.
  */
 @Configuration
+@EnableJpaRepositories(
+        basePackages = "com.satish.exp.repo",
+        entityManagerFactoryRef = "entityManagerFactory",
+        transactionManagerRef = "transactionManager"
+)
 public class DatabaseConfig {
 
     // ----------------------------------------------------------------
-    // DataSource properties
+    // DataSource properties (primary DB)
     // ----------------------------------------------------------------
     @Value("${app.datasource.url}")
     private String jdbcUrl;
+
+    @Value("${app.datasource.url2}")
+    private String jdbcUrl2;
 
     @Value("${app.datasource.username}")
     private String username;
@@ -46,25 +48,13 @@ public class DatabaseConfig {
     private String driverClassName;
 
     // ----------------------------------------------------------------
-    // HikariCP pool properties
+    // HikariCP pool properties (re-purposed for Atomikos pool size)
     // ----------------------------------------------------------------
-    @Value("${app.datasource.hikari.pool-name:AIO-HikariPool}")
-    private String poolName;
-
     @Value("${app.datasource.hikari.maximum-pool-size:10}")
     private int maximumPoolSize;
 
     @Value("${app.datasource.hikari.minimum-idle:2}")
     private int minimumIdle;
-
-    @Value("${app.datasource.hikari.idle-timeout:30000}")
-    private long idleTimeout;
-
-    @Value("${app.datasource.hikari.connection-timeout:20000}")
-    private long connectionTimeout;
-
-    @Value("${app.datasource.hikari.max-lifetime:1800000}")
-    private long maxLifetime;
 
     // ----------------------------------------------------------------
     // JPA / Hibernate properties
@@ -83,29 +73,24 @@ public class DatabaseConfig {
     // ----------------------------------------------------------------
 
     /**
-     * Builds a HikariCP DataSource from the custom app.datasource.* properties.
+     * Builds an Atomikos JTA XA DataSource from the custom app.datasource.* properties.
      */
-    @Bean
+    @Bean(initMethod = "init", destroyMethod = "close")
     @Primary
     public DataSource dataSource() {
-        HikariConfig config = new HikariConfig();
+        AtomikosDataSourceBean ds = new AtomikosDataSourceBean();
+        ds.setUniqueResourceName("primaryXA");
+        ds.setXaDataSourceClassName("org.postgresql.xa.PGXADataSource");
 
-        config.setPoolName(poolName);
-        config.setJdbcUrl(jdbcUrl);
-        config.setUsername(username);
-        config.setPassword(password);
-        config.setDriverClassName(driverClassName);
+        Properties properties = new Properties();
+        properties.setProperty("url", jdbcUrl);
+        properties.setProperty("user", username);
+        properties.setProperty("password", password);
+        ds.setXaProperties(properties);
 
-        config.setMaximumPoolSize(maximumPoolSize);
-        config.setMinimumIdle(minimumIdle);
-        config.setIdleTimeout(idleTimeout);
-        config.setConnectionTimeout(connectionTimeout);
-        config.setMaxLifetime(maxLifetime);
-
-        // Optional: health check query
-        config.setConnectionTestQuery("SELECT 1");
-
-        return new HikariDataSource(config);
+        ds.setMinPoolSize(minimumIdle);
+        ds.setMaxPoolSize(maximumPoolSize);
+        return ds;
     }
 
     /**
@@ -117,7 +102,7 @@ public class DatabaseConfig {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
 
-        em.setDataSource(dataSource);
+        em.setJtaDataSource(dataSource);
         // Scan this package for all @Entity classes
         em.setPackagesToScan("com.satish.exp");
 
@@ -130,17 +115,97 @@ public class DatabaseConfig {
         jpaProperties.setProperty("hibernate.hbm2ddl.auto", ddlAuto);
         jpaProperties.setProperty("hibernate.show_sql", String.valueOf(showSql));
         jpaProperties.setProperty("hibernate.format_sql", "true");
+        jpaProperties.setProperty("hibernate.transaction.coordinator_class", "jta");
         em.setJpaProperties(jpaProperties);
 
         return em;
     }
 
+    @Bean(initMethod = "init", destroyMethod = "close")
+    public UserTransactionManager userTransactionManager() {
+        UserTransactionManager userTransactionManager = new UserTransactionManager();
+        userTransactionManager.setForceShutdown(false);
+        return userTransactionManager;
+    }
+
+    @Bean
+    public UserTransactionImp userTransaction() throws Exception {
+        UserTransactionImp userTransaction = new UserTransactionImp();
+        userTransaction.setTransactionTimeout(300);
+        return userTransaction;
+    }
+
     /**
-     * Wires the JpaTransactionManager with the custom EntityManagerFactory.
+     * Wires the JtaTransactionManager.
      */
+    @Bean(name = "transactionManager")
+    @Primary
+    public PlatformTransactionManager transactionManager() throws Exception {
+        JtaTransactionManager jtaTransactionManager = new JtaTransactionManager();
+        jtaTransactionManager.setTransactionManager(userTransactionManager());
+        jtaTransactionManager.setUserTransaction(userTransaction());
+        return jtaTransactionManager;
+    }
+
     @Bean
     @Primary
-    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
-        return new JpaTransactionManager(entityManagerFactory);
+    public NamedParameterJdbcTemplate namedParameterJdbcTemplate(DataSource dataSource) {
+        return new NamedParameterJdbcTemplate(dataSource);
+    }
+
+    // ================================================================
+    // Secondary DataSource — india1 (app.datasource.url2)
+    // ================================================================
+
+    /**
+     * Secondary Atomikos JTA XA DataSource pointing at the india1 database.
+     */
+    @Bean(name = "dataSource2", initMethod = "init", destroyMethod = "close")
+    public DataSource dataSource2() {
+        AtomikosDataSourceBean ds = new AtomikosDataSourceBean();
+        ds.setUniqueResourceName("secondaryXA");
+        ds.setXaDataSourceClassName("org.postgresql.xa.PGXADataSource");
+
+        Properties properties = new Properties();
+        properties.setProperty("url", jdbcUrl2);
+        properties.setProperty("user", username);
+        properties.setProperty("password", password);
+        ds.setXaProperties(properties);
+
+        ds.setMinPoolSize(minimumIdle);
+        ds.setMaxPoolSize(maximumPoolSize);
+        return ds;
+    }
+
+    /**
+     * Secondary EntityManagerFactory for the india1 database.
+     */
+    @Bean(name = "entityManagerFactory2")
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory2(
+            @Qualifier("dataSource2") DataSource dataSource2) {
+
+        LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+        em.setJtaDataSource(dataSource2);
+        em.setPersistenceUnitName("india1PU");
+        em.setPackagesToScan("com.satish.exp");
+
+        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        vendorAdapter.setShowSql(showSql);
+        em.setJpaVendorAdapter(vendorAdapter);
+
+        Properties jpaProperties = new Properties();
+        jpaProperties.setProperty("hibernate.dialect", hibernateDialect);
+        jpaProperties.setProperty("hibernate.hbm2ddl.auto", ddlAuto);
+        jpaProperties.setProperty("hibernate.show_sql", String.valueOf(showSql));
+        jpaProperties.setProperty("hibernate.format_sql", "true");
+        jpaProperties.setProperty("hibernate.transaction.coordinator_class", "jta");
+        em.setJpaProperties(jpaProperties);
+
+        return em;
+    }
+
+    @Bean(name = "jdbcTemplate2")
+    public NamedParameterJdbcTemplate jdbcTemplate2(@Qualifier("dataSource2") DataSource dataSource2) {
+        return new NamedParameterJdbcTemplate(dataSource2);
     }
 }

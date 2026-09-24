@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping(path="/rest")
@@ -16,8 +17,9 @@ public class HttpServiceController {
     private HttpWebService httpWebService;
 
     @GetMapping("/weather")
-    public ResponseEntity<String> getWeatherData(@RequestParam Float latitude, @RequestParam Float longitude){
-        return httpWebService.getWeatherData(latitude,longitude);
-        //return ResponseEntity.ok(httpWebService.getWeatherData());
+    public Mono<ResponseEntity<String>> getWeatherData(@RequestParam Float latitude, @RequestParam Float longitude){
+        return httpWebService.getWeatherData(latitude, longitude)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }

@@ -26,7 +26,7 @@ public class CustomerService {
     }
 
     public static void main(String[] args) {
-        List<Integer> list = IntStream.range(1 , 100).mapToObj(str -> new Integer(str)).collect(Collectors.toList());
+        List<Integer> list = IntStream.range(1, 100).boxed().collect(Collectors.toList());
         for(List<Integer> smallList: Lists.partition(list,10)){
             System.out.println("batch 1 size: " + smallList.size());
             smallList.forEach(System.out::println);

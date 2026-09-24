@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import java.util.Optional;
 
 @Repository
@@ -14,8 +15,22 @@ public class UserRepository2 {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    public UserRepository2(NamedParameterJdbcTemplate jdbcTemplate) {
+    public UserRepository2(@Qualifier("jdbcTemplate2") NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public void save(User user) {
+        String sql = """
+                    INSERT INTO USER_INFO (id, name, email)
+                    VALUES (:id, :name, :email)
+                """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", user.getId())
+                .addValue("name", user.getName())
+                .addValue("email", user.getEmail());
+
+        jdbcTemplate.update(sql, params);
     }
 
     public Optional<User> findById(Long id) {

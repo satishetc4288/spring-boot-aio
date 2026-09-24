@@ -26,9 +26,13 @@ public class CustomerHandler {
     }
 
     public Mono<ServerResponse> findCustomers(ServerRequest request){
-        int custId = Integer.valueOf(request.pathVariable("input"));
-        Flux<Customer> customer = customerDao.getCustomerList().filter( customer1 -> customer1.getId() == custId);
-        return  ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM).body(customer, Customer.class);
+        try {
+            int custId = Integer.parseInt(request.pathVariable("input"));
+            Flux<Customer> customer = customerDao.getCustomerList().filter( customer1 -> customer1.getId() == custId);
+            return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(customer, Customer.class);
+        } catch (NumberFormatException e) {
+            return ServerResponse.badRequest().bodyValue("Invalid customer ID format. Must be an integer.");
+        }
     }
 
     public Mono<ServerResponse> saveCustomer(ServerRequest request){

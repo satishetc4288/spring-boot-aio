@@ -7,21 +7,23 @@ import com.satish.exp.repo.model.Employee;
 import com.satish.exp.repo.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-
+@ExtendWith(MockitoExtension.class)
 public class DaoServiceTest {
 
     @Mock private UserRepository userRepository;
@@ -33,19 +35,11 @@ public class DaoServiceTest {
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        daoService.setAddressRepository(addressRepository);
-        daoService.setUserRepository(userRepository);
-        daoService.setEmployeeRepository(employeeRepository);
-
-        ReflectionTestUtils.setField(daoService, "userRepository", userRepository);
-        ReflectionTestUtils.setField(daoService, "employeeRepository", employeeRepository);
-        ReflectionTestUtils.setField(daoService, "addressRepository", addressRepository);
+        ReflectionTestUtils.setField(daoService, "asyncExecutor", (Executor) Runnable::run);
     }
 
     @Test
     public void testUserAddSuccess(){
-
         when(userRepository.save(Mockito.any())).thenReturn(new User());
         daoService.addUser(new User());
         assertTrue(true);
